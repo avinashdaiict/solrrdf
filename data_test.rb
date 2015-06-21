@@ -1,6 +1,7 @@
-require 'linkeddata'
-require 'csv'
+require 'linkeddata
 require 'tmpdir'
+ require 'solr'  # load the library
+  include Solr    # Allow Solr:: to be omitted from class/module references
  module Solr
     class CollectionItemsCoreRebuilder
 
@@ -35,53 +36,13 @@ query.execute(graph).each do |solution|
           }
 # The above code is of intrest to us at this moment to us .
 
-      
 
-      def self.begin_rebuild
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.index_all_collection_items
-      end
+  # connect to the solr instance
+  conn = Connection.new('http://localhost:8983/solr', :autocommit => :on)
 
-      def self.reindex_collection(collection)
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.index_collection(collection.id)
-        # update collection items count
-        collection.update_attributes(collection_items_count: collection.collection_items.count)
-      end
-
-      def self.reindex_collection_items(collection_items)
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.index_collection_items_by_id(collection_items.map(&:id))
-      end
-
-      def self.reindex_collection_items_by_ids(collection_item_ids)
-        return unless collection_item_ids && collection_item_ids.class == Array
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.index_collection_items_by_id(collection_item_ids)
-      end
-
-      def self.remove_collection(collection)
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.remove_collection_by_id(collection.id)       
-      end
-
-      def self.remove_collection_items(items)
-        rebuilder = EOL::Solr::CollectionItemsCoreRebuilder.new
-        rebuilder.solr_api.delete_by_ids(items.map(&:id))        
-      end
-
-      def initialize(options={})
-        @solr_api = SolrAPI.new($SOLR_SERVER, $SOLR_COLLECTION_ITEMS_CORE)
-        @objects_to_send_to_solr = []
-        @debug = options[:debug]
-      end
+  # add a document to the index
+  conn.add(:pay_grade => pay_grade, :total_female => total_female,:toatal_male=>total_male)
 
       
-          self.objects_to_send_to_solr.last['sort_field'] = SolrAPI.text_filter(sort_field) unless sort_field.blank?
-          collection_ids_added[collection_item_id] = true
-        end
-      end
 
-    end
-  end
-end
+      
